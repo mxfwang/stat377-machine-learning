@@ -1,0 +1,31 @@
+Viola-Jones Face Detection
+Madison Wang
+STAT37710/CMSC35300
+Spring, 2017
+
+Description
+The program can be run as "python 3 detect.py", or "run detect.py" if you are using iPython. The program runs for around 3.5 hours. It runs under the assumption that in the working directory, there is a subdirectory named "faces", which contains all the positive training examples, and another one named "background", which contains all negative traning examples. It also assumes that the test image "class.jpg" is in the working directory. The program will produce a "class_detect.jpg" file to the working directory, which is the original test image overlaid with squares marking the detected faces.
+I submit three output images along with my code. They show the tradeoff between false positives and false negatives when a parameter is set differently. A more detailed description can be found below.
+
+
+Design Choices
+I used two kinds of features ("eyes" and "nose-and-cheek"), implemented as classes. 
+- A graphical description can be found under the class definition in the code file. 
+- Each feature is implemented as a class, with class method "compute_feature". An instance of the class represents a feature of a particular size, shape and location as specified by its coordinates within the 64 by 64 patch. 
+- Since compute feature cannot be vectorized, and each computation must involve matrix access anyway, I chose to implement them as classes to make the code more straightforward.
+
+After the classifer cascade has been trained, walk through the test image to get preliminary predictions. 
+- I found the false negative is lowest when every possible patch is examined, although it does add ~5 mins of running time. 
+- Record the patches that have been predicted as positive by the cascade. Each patch is identified by the coordinates of its upper left corner. 
+
+Many of these preliminary detections are false positives. 
+- Especially since the first stage of my cascade has about 5% false negative rate, there are few negative training examples for the second stage, so false positive is a big problem. 
+- I chose to use an "ultimate" feature to run through the detections again. 
+- The threshold is set very high in this round, at (feature value - theta) * polarity > 20. This value is set after some experimentation.
+- I attach three output images, "class_detect_0.png", "class_detect_20.png" and "class_detect_40.png" to show the results of using different thresholds in this step.
+
+Most of the preliminary detections overlap. 
+- To solve this problem, I sort the patches by ("ultimate feature" value * polarity) in descending order
+- A patch is added to the final list if no overlapping patch has been added. That is, this patch has the highest "confidence" in its neighborhood. Otherwise the patch is discarded.
+
+I left some printouts in the code to give a sense of progress. They will print the false positive and false negative so far after each weak learner is added, and also each time a classifier finishes. I personally find them very important when running a long program. Hope it's at least not distracting :)
